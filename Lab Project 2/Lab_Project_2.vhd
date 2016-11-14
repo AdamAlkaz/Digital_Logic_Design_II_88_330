@@ -67,11 +67,11 @@ begin
 		--Reset Pressed
 			if (reset = '0') then
 				state <= s0;
-						PPS <= "00000";
-						BC_state <= "11";
-						--MPD <= A; -- used when mapped to FPGA switches
-						--MPR <= B;
-						Done <= '0';
+				PPS <= "00000";
+				BC_state <= "11";
+				--MPD <= A; -- used when mapped to FPGA switches
+				--MPR <= B;
+				Done <= '0';
 			elsif (clk = '0') then
 				case state is
 					when s0 =>
