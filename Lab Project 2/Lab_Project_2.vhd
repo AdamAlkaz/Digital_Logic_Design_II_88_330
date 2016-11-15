@@ -41,37 +41,42 @@ architecture structure of Lab_Project_2 is
 	constant D8 : std_logic_vector(6 downto 0):="0000000";
 	constant D9 : std_logic_vector(6 downto 0):="0010000";
 	constant DX : std_logic_vector(6 downto 0):="1111111";
-	signal p_temp : std_logic_vector (7 downto 0);
 
 	type state_type is (s0,s1,s2,s3);
 	signal state : state_type := s0;
 	
-	signal MPR : std_logic_vector (3 downto 0) := "0011"; --will initialize to A in real application
-	signal MPD : std_logic_vector (3 downto 0) := "1011"; --will initialize to B in real application
-	signal PPS : std_logic_vector (4 downto 0) := "00000"; -- fifth bit of PPS is carry of MPD + PPS
+	
+	signal MPD : std_logic_vector (3 downto 0) := "1111"; --will initialize to B in real application
+	signal MPR : std_logic_vector (3 downto 0) := "1111"; --will initialize to A in real application
 	signal BC_state : std_logic_vector (1 downto 0) := "11";
 	signal hund, tens, ones : std_logic_vector (3 downto 0);
+	signal P : std_logic_vector (7 downto 0);
 
 
 
 	
 begin
 
-	process (start, clk, reset, MPR)
+	process (start, clk, reset, MPR, BC_state, hund, tens, ones)
 		variable P_temp : std_logic_vector (7 downto 0);
 		variable i : integer := 0;
 		variable bcd : std_logic_vector (11 downto 0) := "000000000000" ;
+		variable PPS : std_logic_vector (4 downto 0) := "00000"; -- fifth bit of PPS is carry of MPD + PPS
 		
 		begin
 		
 		--Reset Pressed
 			if (reset = '0') then
 				state <= s0;
-				PPS <= "00000";
-				BC_state <= "11";
-				--MPD <= A; -- used when mapped to FPGA switches
-				--MPR <= B;
-				Done <= '0';
+						PPS := "00000";
+						BC_state <= "11";
+						--MPD <= A; -- used when mapped to FPGA switches
+						--MPR <= B;
+						Done <= '0';
+						bcd := "000000000000";
+						hund <= "0000";
+						tens <= "0000";
+						ones <= "0000";
 			elsif (clk = '0') then
 				case state is
 					when s0 =>
@@ -80,14 +85,15 @@ begin
 						end if;
 					when s1 =>
 						if (MPR(0) = '1') then
-							PPS <= PPS + MPD;
+							PPS := PPS + MPD;
 						end if;
 						state <= s2;
 					when s2 =>
 						P_temp := PPS & MPR(3 downto 1);
-						PPS <= '0' & P_temp(7 downto 4);
+						PPS := '0' & P_temp(7 downto 4);
 						MPR <= P_temp(3 downto 0);
 						if (BC_state = "00") then
+							P <= P_temp;
 							for i in 0 to 7 loop  -- repeating 8 times.
 								bcd := bcd(10 downto 0) & P_temp(7);  --shifting the bits.
 								P_temp := P_temp(6 downto 0) & '0';
